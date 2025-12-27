@@ -1,13 +1,8 @@
 import crypto from "crypto"
 
 // Flow API Configuration
-if (!process.env.FLOW_API_KEY) {
-    throw new Error("FLOW_API_KEY is not defined in environment variables")
-}
+// Validation removed to allow build without env vars
 
-if (!process.env.FLOW_SECRET_KEY) {
-    throw new Error("FLOW_SECRET_KEY is not defined in environment variables")
-}
 
 const FLOW_API_URL = process.env.FLOW_API_URL || "https://www.flow.cl/api"
 
@@ -18,8 +13,8 @@ export interface FlowConfig {
 }
 
 export const flowConfig: FlowConfig = {
-    apiKey: process.env.FLOW_API_KEY,
-    secretKey: process.env.FLOW_SECRET_KEY,
+    apiKey: process.env.FLOW_API_KEY || "",
+    secretKey: process.env.FLOW_SECRET_KEY || "",
     apiUrl: FLOW_API_URL,
 }
 
@@ -47,6 +42,10 @@ export async function flowRequest(
     method: "GET" | "POST" | "PUT" | "DELETE" = "POST",
     params: Record<string, any> = {}
 ): Promise<any> {
+    if (!flowConfig.apiKey || !flowConfig.secretKey) {
+        throw new Error("Flow API keys are missing. Please set FLOW_API_KEY and FLOW_SECRET_KEY in your environment variables.")
+    }
+
     const url = `${flowConfig.apiUrl}${endpoint}`
 
     // Todos los requests de Flow requieren apiKey y firma 's'
