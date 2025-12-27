@@ -1,0 +1,23 @@
+# 1️⃣ Imagen base
+FROM node:20-alpine
+
+# 2️⃣ Directorio de trabajo
+WORKDIR /app
+
+# 3️⃣ Copiar archivos de dependencias
+COPY package.json package-lock.json* pnpm-lock.yaml* ./
+
+# 4️⃣ Instalar dependencias
+RUN npm ci --production=false
+
+# 5️⃣ Copiar el resto del proyecto
+COPY . .
+
+# 6️⃣ Build de Next.js
+RUN npm run build
+
+# 7️⃣ Exponer puerto
+EXPOSE 3000
+
+# 8️⃣ Ejecutar en producción
+CMD ["npm", "start"]
