@@ -71,7 +71,7 @@ export default function DashboardLayout({
           isSidebarCollapsed={isSidebarCollapsed}
           onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         />
-        <main className="pt-24 p-6 lg:p-10">{children}</main>
+        <main className="pt-20 px-6 pb-6 lg:px-10 lg:pb-10">{children}</main>
       </div>
     </div>
   )

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Download, FileText, Search, Eye, Share, Trash2, Loader2, Plus } from "lucide-react"
+import { Download, FileText, Search, Eye, Share, Trash2, Loader2, Plus, BarChart2, TrendingUp, Users, RefreshCcw, Calendar, Bookmark, Zap } from "lucide-react"
 import { auth } from "@/lib/firebase"
 import { onAuthStateChanged } from "firebase/auth"
 import { getReports, createReport, deleteReport, getFilteredResponses, exportToCSV, type Report } from "@/lib/services/reports"
@@ -190,18 +190,18 @@ export default function ReportesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-heading">Reportes</h1>
-          <p className="text-muted-foreground">Genera y gestiona reportes personalizados</p>
+    <div className="space-y-8 pb-10">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-1">
+          <h1 className="text-4xl font-black tracking-tight text-gray-900">Reportes</h1>
+          <p className="text-muted-foreground text-lg italic font-medium">Genera y gestiona reportes personalizados de alto impacto.</p>
         </div>
 
         <Dialog open={isCreating} onOpenChange={setIsCreating}>
           <DialogTrigger asChild>
-            <Button className="shadow-lg shadow-primary/20">
-              <FileText className="h-4 w-4 mr-2" />
-              Crear reporte
+            <Button className="h-12 px-8 rounded-2xl font-bold bg-primary shadow-xl shadow-primary/20 hover:scale-105 transition-all active:scale-95">
+              <Plus className="h-4 w-4 mr-2" />
+              Nuevo Reporte
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
@@ -255,60 +255,70 @@ export default function ReportesPage() {
         </Dialog>
       </div>
 
-      {/* Estadísticas rápidas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-primary">{reports.length}</div>
-            <p className="text-xs text-muted-foreground">Reportes generados</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-accent">{reports.length * 5}</div>
-            <p className="text-xs text-muted-foreground">Descargas estimadas</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-primary">0</div>
-            <p className="text-xs text-muted-foreground">Reportes programados</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-accent">Realtime</div>
-            <p className="text-xs text-muted-foreground">Sincronización</p>
-          </CardContent>
-        </Card>
+      {/* Estadísticas rápidas - Elite Style */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { title: "Generados", value: reports.length, sub: "Total histórico", icon: FileText, color: "text-blue-600", bg: "bg-blue-50" },
+          { title: "Descargas", value: reports.length * 5, sub: "Estimado visual", icon: Download, color: "text-emerald-600", bg: "bg-emerald-50" },
+          { title: "Programados", value: "0", sub: "Próximamente", icon: Calendar, color: "text-purple-600", bg: "bg-purple-50" },
+          { title: "Sincronización", value: "Realtime", sub: "Estado activo", icon: RefreshCcw, color: "text-amber-500", bg: "bg-amber-50" }
+        ].map((kpi, idx) => (
+          <Card key={idx} className="border-none shadow-sm hover:shadow-md transition-all rounded-2xl overflow-hidden group">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-start">
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{kpi.title}</p>
+                  <h3 className="text-3xl font-black">{kpi.value}</h3>
+                  <p className="text-[10px] text-muted-foreground font-bold">{kpi.sub}</p>
+                </div>
+                <div className={`p-3 rounded-xl ${kpi.bg} ${kpi.color} group-hover:scale-110 transition-transform`}>
+                  <kpi.icon className="h-5 w-5" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Plantillas de reportes */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Plantillas de reportes</CardTitle>
+      <Card className="border-none shadow-sm rounded-2xl overflow-hidden">
+        <CardHeader className="bg-primary/5 border-b border-primary/10">
+          <CardTitle className="text-xl font-black flex items-center gap-2">
+            <Bookmark className="h-5 w-5 text-primary" />
+            Plantillas Prediseñadas
+          </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {reportTemplates.map((template, index) => (
-              <div key={index} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold">{template.name}</h3>
-                  <Badge variant="outline">{template.format}</Badge>
+              <div key={index} className="group border-2 border-muted hover:border-primary/30 rounded-2xl p-5 hover:bg-primary/5 transition-all duration-300 relative overflow-hidden">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="space-y-1">
+                    <h3 className="font-black text-gray-900">{template.name}</h3>
+                    <div className="flex gap-2">
+                      <Badge variant="secondary" className="text-[9px] font-bold uppercase">{template.format}</Badge>
+                      <Badge variant="outline" className="text-[9px] font-bold uppercase">{template.type}</Badge>
+                    </div>
+                  </div>
+                  <div className="p-2 bg-white rounded-xl shadow-sm group-hover:bg-primary group-hover:text-white transition-colors">
+                    <Zap className="h-4 w-4" />
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground mb-3">{template.description}</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">{template.duration}</span>
-                  <Button size="sm" onClick={() => {
+                <p className="text-xs text-muted-foreground mb-4 line-clamp-2 italic font-medium">{template.description}</p>
+                <div className="flex items-center justify-between mt-auto">
+                  <span className="text-[10px] text-muted-foreground font-black uppercase tracking-tighter flex items-center gap-1">
+                    <Loader2 className="h-3 w-3" /> {template.duration}
+                  </span>
+                  <Button size="sm" className="rounded-xl font-bold h-9 px-4 hover:scale-105 transition-transform" onClick={() => {
                     const firstSurvey = surveys[0]?.id;
                     if (firstSurvey) {
                       setSelectedSurveyIds([firstSurvey]);
-                      handleCreateReport(template.name, template.type);
+                      handleCreateReport(template.name, template.format);
                     } else {
                       toast.error("Crea una encuesta primero para usar plantillas");
                     }
                   }}>
-                    Usar plantilla
+                    Usar ahora
                   </Button>
                 </div>
               </div>
@@ -317,63 +327,65 @@ export default function ReportesPage() {
         </CardContent>
       </Card>
 
-      {/* Filtros */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
+      {/* Filtros Profesionales */}
+      <Card className="border-none shadow-sm rounded-2xl overflow-hidden bg-white">
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar reportes..."
-                className="pl-10 h-10"
+                placeholder="Buscar reportes por nombre..."
+                className="pl-12 h-12 rounded-xl border-gray-200 focus:ring-primary/20"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Tipo de reporte" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los tipos</SelectItem>
-                <SelectItem value="Individual">Individual</SelectItem>
-                <SelectItem value="Combinado">Combinado</SelectItem>
-                <SelectItem value="Mensual">Mensual</SelectItem>
-                <SelectItem value="Trimestral">Trimestral</SelectItem>
-                <SelectItem value="Especializado">Especializado</SelectItem>
-                <SelectItem value="Ejecutivo">Ejecutivo</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los estados</SelectItem>
-                <SelectItem value="Completado">Completado</SelectItem>
-                <SelectItem value="Procesando">Procesando</SelectItem>
-                <SelectItem value="Programado">Programado</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-full sm:w-48 h-12 rounded-xl border-gray-200">
+                  <SelectValue placeholder="Tipo de reporte" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los tipos</SelectItem>
+                  <SelectItem value="Individual">Individual</SelectItem>
+                  <SelectItem value="Combinado">Combinado</SelectItem>
+                  <SelectItem value="Mensual">Mensual</SelectItem>
+                  <SelectItem value="Trimestral">Trimestral</SelectItem>
+                  <SelectItem value="Especializado">Especializado</SelectItem>
+                  <SelectItem value="Ejecutivo">Ejecutivo</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-48 h-12 rounded-xl border-gray-200">
+                  <SelectValue placeholder="Estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los estados</SelectItem>
+                  <SelectItem value="Completado">Completado</SelectItem>
+                  <SelectItem value="Procesando">Procesando</SelectItem>
+                  <SelectItem value="Programado">Programado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Lista de reportes */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Mis reportes ({filteredReports.length})</CardTitle>
+      <Card className="border-none shadow-sm rounded-2xl overflow-hidden">
+        <CardHeader className="bg-muted/30 border-b">
+          <CardTitle className="text-lg font-black">Mis Reportes Guardados ({filteredReports.length})</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Métricas</TableHead>
-                <TableHead>Acciones</TableHead>
+              <TableRow className="hover:bg-transparent border-b">
+                <TableHead className="font-bold py-4">Reporte</TableHead>
+                <TableHead className="font-bold">Tipo</TableHead>
+                <TableHead className="font-bold">Estado</TableHead>
+                <TableHead className="font-bold text-center">Fecha</TableHead>
+                <TableHead className="font-bold">Métricas</TableHead>
+                <TableHead className="font-bold text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -417,14 +429,14 @@ export default function ReportesPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" title="Descargar" onClick={() => handleDownload(report)}>
+                      <div className="flex items-center gap-1 justify-end">
+                        <Button variant="ghost" size="icon" title="Descargar" className="hover:text-primary hover:bg-primary/10 transition-colors" onClick={() => handleDownload(report)}>
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" title="Eliminar" className="text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => handleDelete(report.id)}>
+                        <Button variant="ghost" size="icon" title="Eliminar" className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 transition-colors" onClick={() => handleDelete(report.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" title="Compartir">
+                        <Button variant="ghost" size="icon" title="Compartir" className="hover:text-amber-600 hover:bg-amber-50 transition-colors">
                           <Share className="h-4 w-4" />
                         </Button>
                       </div>

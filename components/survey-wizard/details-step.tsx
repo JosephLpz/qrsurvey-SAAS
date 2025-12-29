@@ -119,24 +119,30 @@ export function SurveyDetailsStep({ data, onChange }: SurveyDetailsStepProps) {
           </div>
         </div>
 
-        <div className="bg-slate-900 p-8 rounded-[2rem] relative overflow-hidden group">
-          <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-orange-600 rounded-full blur-2xl opacity-20" />
-          <h4 className="font-black text-white mb-4 flex items-center gap-2 uppercase text-xs tracking-[0.2em]">
-            <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+        <div className="bg-orange-50/50 border border-orange-100 p-8 rounded-[2.5rem] relative overflow-hidden group">
+          <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-orange-200 rounded-full blur-2xl opacity-40" />
+          <h4 className="font-black text-orange-900 mb-6 flex items-center gap-2 uppercase text-xs tracking-[0.2em] relative z-10">
+            <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
             Estrategia de Recolección
           </h4>
-          <ul className="text-sm text-slate-400 space-y-3 font-medium">
-            <li className="flex gap-3 items-start">
-              <span className="text-orange-500 font-black mt-0.5">01</span>
-              <span>Usa un nombre claro y descriptivo para segmentar tus reportes.</span>
+          <ul className="text-sm text-slate-600 space-y-4 font-medium relative z-10">
+            <li className="flex gap-4 items-start">
+              <div className="h-6 w-6 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
+                <span className="text-orange-600 font-black text-[10px]">01</span>
+              </div>
+              <span className="pt-0.5">Usa un nombre claro y descriptivo para segmentar tus reportes.</span>
             </li>
-            <li className="flex gap-3 items-start">
-              <span className="text-orange-500 font-black mt-0.5">02</span>
-              <span>La descripción es interna, úsala para definir KPIs específicos.</span>
+            <li className="flex gap-4 items-start">
+              <div className="h-6 w-6 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
+                <span className="text-orange-600 font-black text-[10px]">02</span>
+              </div>
+              <span className="pt-0.5">La descripción es interna, úsala para definir KPIs específicos.</span>
             </li>
-            <li className="flex gap-3 items-start">
-              <span className="text-orange-500 font-black mt-0.5">03</span>
-              <span>Vincula la sede correcta para habilitar el Benchmarking inteligente.</span>
+            <li className="flex gap-4 items-start">
+              <div className="h-6 w-6 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
+                <span className="text-orange-600 font-black text-[10px]">03</span>
+              </div>
+              <span className="pt-0.5">Vincula la sede correcta para habilitar el Benchmarking inteligente.</span>
             </li>
           </ul>
         </div>

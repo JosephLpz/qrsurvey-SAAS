@@ -16,9 +16,10 @@ export async function POST(req: Request) {
         console.log("Flow Webhook: Received token:", token)
 
         // Obtener estado del pago usando el token
+        console.log(`[Flow Webhook] Fetching status for token: ${token}`)
         const paymentStatus = await flowRequest("/payment/getStatus", "GET", { token })
 
-        console.log("Flow Payment Status:", paymentStatus.status)
+        console.log(`[Flow Webhook] Payment Status: ${paymentStatus.status} for Order: ${paymentStatus.commerceOrder}`)
 
         /**
          * Flow Status Mapping:
@@ -28,41 +29,41 @@ export async function POST(req: Request) {
          * 4: Canceled
          */
         const status = paymentStatus.status
-        const optional = paymentStatus.optional ? JSON.parse(paymentStatus.optional) : {}
+        const optional = paymentStatus.optional
+            ? (typeof paymentStatus.optional === 'string' ? JSON.parse(paymentStatus.optional) : paymentStatus.optional)
+            : {}
         const userId = optional.userId
         const commerceOrder = paymentStatus.commerceOrder
 
         if (!userId) {
-            console.error("Flow Webhook: No userId found in optional data")
-            return NextResponse.json({ received: true }) // Accept but log error
+            console.error("[Flow Webhook Error] No userId found in optional data. paymentStatus:", JSON.stringify(paymentStatus))
+            return NextResponse.json({ received: true, error: "No userId in metadata" })
         }
 
         switch (status) {
             case 2: // Paid
-                console.log("Processing PRO upgrade for:", userId)
+                console.log(`[Flow Webhook] Processing PRO upgrade for user: ${userId}`)
                 await dbAdmin.collection("users").doc(userId).update({
                     plan: "pro",
                     flowCustomerId: commerceOrder,
                     subscriptionStatus: "active",
                     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
                 })
-                console.log("✅ User upgraded successfully via Flow")
+                console.log(`[Flow Webhook] ✅ User ${userId} upgraded successfully`)
                 break
 
             case 3: // Rejected
             case 4: // Canceled
-                console.log(`❌ Payment ${status === 3 ? "rejected" : "canceled"} for user:`, userId)
-                // Opcional: degradar plan si era una renovación fallida
+                console.log(`[Flow Webhook] ❌ Payment ${status === 3 ? "rejected" : "canceled"} for user: ${userId}`)
                 break
 
             default:
-                console.log("Ignored payment status:", status)
+                console.log(`[Flow Webhook] ℹ️ Ignored payment status: ${status} for user: ${userId}`)
         }
 
         return NextResponse.json({ received: true })
     } catch (error: any) {
-        console.error("Flow Webhook Handler Error:", error)
-        // Flow reintenta si no recibe 200 OK
-        return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 })
+        console.error("[Flow Webhook Critical Error]:", error)
+        return NextResponse.json({ error: "Webhook handler failed", message: error.message }, { status: 500 })
     }
 }

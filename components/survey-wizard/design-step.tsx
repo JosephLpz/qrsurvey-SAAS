@@ -206,32 +206,6 @@ export function SurveyDesignStep({ data, onChange, plan = "free" }: SurveyDesign
         </CardContent>
       </Card>
 
-      {plan === "pro" && (
-        <div className="p-8 bg-slate-900 rounded-[2.5rem] relative overflow-hidden group border border-slate-800 shadow-2xl shadow-slate-200">
-          <div className="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-orange-600 rounded-full blur-[80px] opacity-30 group-hover:opacity-50 transition-opacity" />
-          <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-            <div className="w-20 h-20 bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl flex items-center justify-center text-orange-500 shadow-2xl">
-              <Sparkles className="h-10 w-10 fill-orange-500" />
-            </div>
-            <div className="flex-1 space-y-2 text-center md:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500 text-white text-[10px] font-black uppercase tracking-widest mb-2">
-                Nivel Élite
-              </div>
-              <h3 className="text-2xl font-black text-white tracking-tight">QR Design Studio PRO</h3>
-              <p className="text-slate-400 font-medium text-sm max-w-md">
-                Desbloquea el control absoluto: patrones industriales, corrección de contraste inteligente y exportación en 300 DPI para impresión masiva.
-              </p>
-            </div>
-            <Link href="/dashboard/qr-editor">
-              <Button className="h-14 px-8 bg-white text-slate-900 hover:bg-orange-600 hover:text-white font-black rounded-2xl shadow-xl transition-all hover:scale-[1.05] active:scale-95">
-                <Sliders className="h-5 w-5 mr-3" />
-                Abrir Studio
-              </Button>
-            </Link>
-          </div>
-        </div>
-      )}
-
       <Card className="border-none shadow-2xl shadow-slate-100 rounded-[2.5rem] overflow-hidden bg-white">
         <CardHeader className="pt-8 px-8 pb-4">
           <CardTitle className="text-2xl font-black text-slate-900">Estrategia de Visualización</CardTitle>

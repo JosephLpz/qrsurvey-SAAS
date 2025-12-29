@@ -15,6 +15,7 @@ import { getSurveys, Survey } from "@/lib/services/surveys"
 import { QRCodeCanvas } from "qrcode.react"
 import { toast } from "sonner"
 import { useSearchParams } from "next/navigation"
+import { toPng } from "html-to-image"
 
 const posterTemplates = [
   { id: "modern", name: "Moderno", description: "Diseño limpio y minimalista" },
@@ -38,6 +39,7 @@ function QRGeneratorContent() {
   const [instructions, setInstructions] = useState("")
   const [qrSize, setQrSize] = useState(256)
   const [loading, setLoading] = useState(true)
+  const posterRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -46,9 +48,9 @@ function QRGeneratorContent() {
           const fetchedSurveys = await getSurveys(user.uid)
           setSurveys(fetchedSurveys)
 
-          let targetSurveyId = initialSurveyId
+          let targetSurveyId: string | null = initialSurveyId
           if (fetchedSurveys.length > 0 && !targetSurveyId) {
-            targetSurveyId = fetchedSurveys[0].id
+            targetSurveyId = fetchedSurveys[0].id || null
           }
 
           if (targetSurveyId) {
@@ -92,37 +94,38 @@ function QRGeneratorContent() {
     }
   }
 
+  const [origin, setOrigin] = useState("")
+
+  useEffect(() => {
+    setOrigin(window.location.origin)
+  }, [])
+
   const selectedSurvey = surveys.find(s => s.id === selectedSurveyId)
   const surveyUrl = selectedSurveyId
-    ? `${window.location.origin}/s/${selectedSurveyId}`
+    ? `${origin}/s/${selectedSurveyId}`
     : "https://nexava.com"
 
-  const handleDownload = (type: 'png' | 'pdf') => {
-    if (!selectedSurveyId) return
+  const handleDownload = async () => {
+    if (!selectedSurveyId || !posterRef.current) return
 
-    const previewElement = document.getElementById('poster-preview')
-    if (previewElement) {
-      // Simple download logic for now, utilizing the QR canvas directly for higher quality if needed, 
-      // or we could use html2canvas if we wanted the full poster. 
-      // For consistency with previous logic, let's stick to downloading the QR or we can enhance to download poster.
-      // User asked for "Descargar PNG" usually referring to the QR. 
-      // If we want the *poster*, we need html2canvas. Let's stick to QR download for safety unless requested otherwise,
-      // BUT the user interface implies "Descargar PNG" of the preview? 
-      // limit: The previous code downloaded just the QR canvas. Let's keep that for stability, 
-      // but maybe the user wants the WHOLE poster? The design step had "Descargar póster (PDF)".
-      // Let's stick to the existing functioning QR download to avoid breaking it, but rename button if needed.
+    try {
+      toast.loading("Generando material de alta fidelidad...", { id: "downloading" });
 
-      const canvas = document.getElementById('qr-code-canvas') as HTMLCanvasElement
-      if (canvas) {
-        const pngUrl = canvas.toDataURL("image/png")
-        const downloadLink = document.createElement("a")
-        downloadLink.href = pngUrl
-        downloadLink.download = `qrcode-${selectedSurveyId}.png`
-        document.body.appendChild(downloadLink)
-        downloadLink.click()
-        document.body.removeChild(downloadLink)
-        toast.success("Código QR descargado")
-      }
+      const dataUrl = await toPng(posterRef.current, {
+        pixelRatio: 3,
+        cacheBust: true,
+        backgroundColor: "#FFFFFF",
+      });
+
+      const link = document.createElement("a");
+      link.download = `qrsurvey-poster-${selectedSurveyId}.png`;
+      link.href = dataUrl;
+      link.click();
+
+      toast.success("Póster descargado correctamente", { id: "downloading" });
+    } catch (error) {
+      console.error("Error exporting poster:", error);
+      toast.error("Error al exportar el póster", { id: "downloading" });
     }
   }
 
@@ -205,6 +208,21 @@ function QRGeneratorContent() {
               </div>
 
               <div className="space-y-2">
+                <Label>Color Primario</Label>
+                <div className="flex gap-3">
+                  <input
+                    type="color"
+                    value={primaryColor}
+                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    className="w-12 h-10 rounded-lg cursor-pointer border-2 border-muted"
+                  />
+                  <div className="flex-1 flex items-center px-3 border rounded-lg text-xs font-mono bg-muted/30 uppercase">
+                    {primaryColor}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="instructions">Instrucciones pie de página</Label>
                 <Textarea
                   id="instructions"
@@ -258,7 +276,7 @@ function QRGeneratorContent() {
               <div className="bg-muted/30 rounded-xl p-8 flex justify-center">
                 {/* Poster Preview matching Design Step logic */}
                 <div
-                  id="poster-preview"
+                  ref={posterRef}
                   className={`bg-white rounded-lg shadow-xl w-full max-w-sm aspect-[3/4] p-6 relative flex flex-col overflow-hidden transition-all duration-300`}
                 >
                   {/* Top Bar for Colorful/General */}
@@ -291,7 +309,7 @@ function QRGeneratorContent() {
                         <QRCodeCanvas
                           id="qr-code-canvas"
                           value={surveyUrl}
-                          size={200}
+                          size={Math.min(qrSize, 280)}
                           level={"H"}
                           includeMargin={true}
                         />
@@ -320,9 +338,9 @@ function QRGeneratorContent() {
               <CardTitle>Descargas</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full" disabled={!selectedSurveyId} onClick={() => handleDownload('png')}>
+              <Button className="w-full" disabled={!selectedSurveyId} onClick={handleDownload}>
                 <Download className="h-4 w-4 mr-2" />
-                Descargar Código QR (PNG)
+                Descargar PNG de Alta Calidad
               </Button>
               <Button variant="outline" className="w-full" disabled={!selectedSurveyId} onClick={handleCopyUrl}>
                 <Copy className="h-4 w-4 mr-2" />

@@ -9,15 +9,18 @@ import Link from "next/link"
 import { toast } from "sonner"
 import { auth } from "@/lib/firebase"
 import { onAuthStateChanged } from "firebase/auth"
+import { useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 
-export default function QREditorPage() {
+function QREditorContent() {
     const [loading, setLoading] = useState(true)
-    const [isPro, setIsPro] = useState(false) // This will be our "Bypass" for now
+    const [isPro, setIsPro] = useState(false)
+    const searchParams = useSearchParams()
+    const surveyId = searchParams.get("surveyId")
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
-                // En desarrollo, permitimos previsualizar
                 setIsPro(true)
             }
             setLoading(false)
@@ -39,13 +42,18 @@ export default function QREditorPage() {
         )
     }
 
+    // Dynamic URL based on surveyId
+    const qrValue = surveyId
+        ? `${typeof window !== 'undefined' ? window.location.origin : ''}/s/${surveyId}`
+        : "https://qrsurvey.com/s/joseph-limited-edition"
+
     return (
         <div className="max-w-7xl mx-auto space-y-8">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div className="space-y-2">
-                    <Link href="/dashboard" className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors mb-2">
+                    <Link href="/dashboard/encuestas" className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors mb-2">
                         <ArrowLeft className="h-4 w-4 mr-1" />
-                        Volver al dashboard
+                        Volver a mis encuestas
                     </Link>
                     <div className="flex items-center gap-3">
                         <h1 className="text-4xl font-black tracking-tight">QR Design Studio</h1>
@@ -72,7 +80,7 @@ export default function QREditorPage() {
                 <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-accent/5 rounded-full blur-3xl -z-10" />
 
                 <QRCodeCustomizer
-                    initialValue="https://qrsurvey.com/s/joseph-limited-edition"
+                    initialValue={qrValue}
                     onSave={handleSave}
                 />
             </div>
@@ -83,10 +91,13 @@ export default function QREditorPage() {
                     <div className="space-y-1">
                         <h3 className="font-bold text-primary flex items-center gap-2">
                             <Save className="h-4 w-4" />
-                            ¿Como activar para todos?
+                            Diseño Vinculado
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                            Esta sección está en modo "SandBox". Para activarla en el flujo de creación de encuestas, solo debes cambiar el flag <code className="bg-primary/10 px-1 rounded text-primary">ENABLE_PRO_QR</code> a true en el componente Wizard.
+                            {surveyId
+                                ? `Estás diseñando el material para la encuesta ID: ${surveyId}.`
+                                : "Modo de diseño libre. No hay ninguna encuesta vinculada temporalmente."
+                            }
                         </p>
                     </div>
                     <Button className="shrink-0 bg-primary hover:bg-primary/90">
@@ -98,7 +109,15 @@ export default function QREditorPage() {
     )
 }
 
-// Simple Card placeholder since I used it in instructions
+export default function QREditorPage() {
+    return (
+        <Suspense fallback={<div className="flex justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>}>
+            <QREditorContent />
+        </Suspense>
+    )
+}
+
+// Simple Card placeholder
 function Card({ children, className }: { children: React.ReactNode, className?: string }) {
     return <div className={`rounded-xl border bg-card text-card-foreground shadow-sm ${className}`}>{children}</div>
 }

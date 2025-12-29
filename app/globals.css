@@ -128,3 +128,23 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Fix for Radix UI Portals - Ensures dropdowns appear above all content */
+[data-radix-popper-content-wrapper] {
+  z-index: 10000 !important;
+}
+
+[data-radix-dropdown-menu-content],
+[data-radix-popover-content] {
+  z-index: 10000 !important;
+}
+
+/* Ensure dropdown menu content is properly positioned */
+[data-radix-dropdown-menu-content] {
+  position: fixed !important;
+}
+
+/* Reset any transform issues */
+[data-state="open"][data-radix-dropdown-menu-content] {
+  animation: none !important;
+}

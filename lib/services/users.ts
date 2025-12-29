@@ -1,6 +1,13 @@
 import { db } from "@/lib/firebase"
 import { doc, getDoc, setDoc, Timestamp } from "firebase/firestore"
 
+/**
+ * NOTA PARA MIGRACIÓN:
+ * Si cambias a Postgres, esta es la capa que debes modificar. 
+ * Las funciones deben mantener la misma firma (input/output) 
+ * para no romper el resto de la aplicación.
+ */
+
 export interface UserProfile {
     uid: string
     name: string

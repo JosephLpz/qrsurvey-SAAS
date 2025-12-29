@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 }
 
 import { AuthProvider } from "@/providers/AuthProvider"
+import { LocationProvider } from "@/providers/LocationProvider"
 
 export default function RootLayout({
   children,
@@ -24,7 +25,9 @@ export default function RootLayout({
     <html lang="es">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <AuthProvider>
-          <Suspense fallback={null}>{children}</Suspense>
+          <LocationProvider>
+            <Suspense fallback={null}>{children}</Suspense>
+          </LocationProvider>
         </AuthProvider>
         <Analytics />
         <Toaster />

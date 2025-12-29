@@ -42,15 +42,9 @@ function DropdownMenuContent({
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
         className={cn(
-          'bg-popover text-popover-foreground max-h-[var(--radix-dropdown-menu-content-available-height)] min-w-[8rem] origin-[var(--radix-dropdown-menu-content-transform-origin)] overflow-x-hidden overflow-y-auto rounded-md border p-1 shadow-md',
+          'z-[10000] bg-popover text-popover-foreground max-h-[var(--radix-dropdown-menu-content-available-height)] min-w-[8rem] origin-[var(--radix-dropdown-menu-content-transform-origin)] overflow-x-hidden overflow-y-auto rounded-md border p-1 shadow-md',
           className,
         )}
-        style={{ 
-          zIndex: 10000,
-          opacity: 1,
-          visibility: 'visible',
-          display: 'block'
-        }}
         {...props}
       />
     </DropdownMenuPrimitive.Portal>

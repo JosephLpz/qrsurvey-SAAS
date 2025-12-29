@@ -23,6 +23,7 @@ import { type AnalyticsData, getAnalyticsDashboard } from "@/lib/services/analyt
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 import { useAuth } from "@/providers/AuthProvider"
+import { useLocation } from "@/providers/LocationProvider"
 import { getUserUsage, PLAN_LIMITS, UserUsage } from "@/lib/services/quotas"
 import { getUserProfile, UserProfile } from "@/lib/services/users"
 import { Progress } from "@/components/ui/progress"
@@ -39,6 +40,7 @@ export default function DashboardPage() {
     if (user) {
       const fetchData = async () => {
         try {
+          setLoading(true)
           const [surveysData, analyticsData, usageData, profile] = await Promise.all([
             getSurveys(user.uid),
             getAnalyticsDashboard(user.uid),
@@ -233,19 +235,31 @@ export default function DashboardPage() {
             <CardTitle className="text-xl font-bold">Satisfacción por sede</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[320px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analytics?.locationPerformance || []}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="sede" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
-                  <YAxis hide domain={[0, 5]} />
-                  <Tooltip
-                    cursor={{ fill: '#f8fafc', opacity: 1 }}
-                    contentStyle={{ border: 'none', borderRadius: '16px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Bar dataKey="satisfaction" fill="#10b981" radius={[8, 8, 0, 0]} barSize={40} />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="h-[320px] overflow-x-auto custom-scrollbar">
+              <div style={{
+                minWidth: analytics?.locationPerformance && analytics.locationPerformance.length > 8
+                  ? `${analytics.locationPerformance.length * 60}px`
+                  : '100%'
+              }} className="h-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={analytics?.locationPerformance || []}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis
+                      dataKey="sede"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 10, fill: '#64748b' }}
+                      interval={0}
+                    />
+                    <YAxis hide domain={[0, 5]} />
+                    <Tooltip
+                      cursor={{ fill: '#f8fafc', opacity: 1 }}
+                      contentStyle={{ border: 'none', borderRadius: '16px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    />
+                    <Bar dataKey="satisfaction" fill="#10b981" radius={[8, 8, 0, 0]} barSize={32} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </CardContent>
         </Card>

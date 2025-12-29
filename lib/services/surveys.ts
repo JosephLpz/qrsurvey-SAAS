@@ -65,7 +65,7 @@ export const createSurvey = async (surveyData: Omit<Survey, "id" | "createdAt" |
 }
 
 // ... existing imports
-import { doc, getDoc, updateDoc } from "firebase/firestore"
+import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore"
 
 // ... existing code
 
@@ -120,14 +120,28 @@ export const duplicateSurvey = async (surveyId: string, ownerId: string) => {
     }
 }
 
-export const getSurveys = async (ownerId: string): Promise<Survey[]> => {
-    // ... existing getSurveys implementation
+export const deleteSurvey = async (surveyId: string) => {
     try {
-        const q = query(
+        const docRef = doc(db, SURVEYS_COLLECTION, surveyId)
+        await deleteDoc(docRef)
+    } catch (error) {
+        console.error("Error deleting survey: ", error)
+        throw error
+    }
+}
+
+export const getSurveys = async (ownerId: string, sede?: string): Promise<Survey[]> => {
+    try {
+        let q = query(
             collection(db, SURVEYS_COLLECTION),
             where("ownerId", "==", ownerId),
             orderBy("createdAt", "desc")
         )
+
+        if (sede && sede !== "Todas") {
+            q = query(q, where("sede", "==", sede))
+        }
+
         const querySnapshot = await getDocs(q)
         return querySnapshot.docs.map((doc) => ({
             id: doc.id,

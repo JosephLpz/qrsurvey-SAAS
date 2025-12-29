@@ -29,7 +29,7 @@ export function SurveyRender({
     const [answers, setAnswers] = useState<Record<string, any>>({})
 
     const questions = survey.questions || []
-    const design = survey.design || { primaryColor: "#000000", template: "modern" }
+    const design = (survey.design || { primaryColor: "#000000", template: "modern", logo: null }) as any
 
     const handleAnswer = (questionId: string, value: any) => {
         if (mode === "preview") return
@@ -185,7 +185,7 @@ export function SurveyRender({
     }
 
     return (
-        <div className={`w-full max-w-2xl mx-auto ${mode === "preview" ? "pointer-events-none select-none" : ""}`} style={containerStyle}>
+        <div className="w-full" style={containerStyle}>
             <Card className="border-none shadow-2xl shadow-slate-100 rounded-[2.5rem] overflow-hidden bg-white" style={cardStyle}>
                 {!isMinimal && <div className="h-1 w-full" style={primaryBgStyle} />}
                 <CardContent className="p-8 lg:p-12 space-y-10">

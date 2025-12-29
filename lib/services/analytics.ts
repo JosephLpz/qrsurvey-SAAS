@@ -1,6 +1,7 @@
 import { db } from "@/lib/firebase"
 import { collection, query, where, getDocs, orderBy, Timestamp } from "firebase/firestore"
 import { SURVEYS_COLLECTION, Survey } from "./surveys"
+import { getLocations } from "./locations"
 
 export interface SatisfactionDriver {
     driver: string
@@ -50,13 +51,12 @@ export interface LocationPerformance {
 
 export const getAnalyticsDashboard = async (ownerId: string, filterSede?: string): Promise<AnalyticsData> => {
     try {
-        // 1. Fetch all surveys for this owner
-        const surveysQuery = query(
-            collection(db, SURVEYS_COLLECTION),
-            where("ownerId", "==", ownerId)
-        )
-        const surveysSnap = await getDocs(surveysQuery)
+        const [surveysSnap, locations] = await Promise.all([
+            getDocs(query(collection(db, SURVEYS_COLLECTION), where("ownerId", "==", ownerId))),
+            getLocations(ownerId)
+        ])
         const surveys = surveysSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Survey)
+        const officialSedeNames = locations.map(l => l.name)
 
         // 2. Fetch responses for these surveys
         const surveyIds = surveys.map(s => s.id)
@@ -125,6 +125,10 @@ export const getAnalyticsDashboard = async (ownerId: string, filterSede?: string
         const topicCounter = new Map<string, number>()
 
         // Initialize maps
+        officialSedeNames.forEach(name => {
+            locationMap.set(name, { responses: 0, ratingSum: 0, count: 0, recentRatingSum: 0, recentCount: 0 })
+        })
+
         for (let h = 0; h < 24; h++) hourMap.set(h, 0)
         const now = new Date()
         const last24h = new Date(now.getTime() - (24 * 60 * 60 * 1000))
@@ -168,7 +172,8 @@ export const getAnalyticsDashboard = async (ownerId: string, filterSede?: string
             }
 
             // Location stats
-            const sede = r.sede || "General"
+            const survey = surveys.find(s => s.id === r.surveyId)
+            const sede = r.sede || survey?.sede || "General"
             const lStats = locationMap.get(sede) || { responses: 0, ratingSum: 0, count: 0, recentRatingSum: 0, recentCount: 0 }
             const isRecent = r.createdAt && r.createdAt > last24h
 

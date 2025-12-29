@@ -55,26 +55,41 @@ export async function flowRequest(
     }
 
     const signature = generateSignature(fullParams)
+
+    // Todos los parámetros van en el body para POST/PUT en formato x-www-form-urlencoded
     const bodyParams = new URLSearchParams()
 
+    // Añadir todos los parámetros originales (incluyendo apiKey)
     for (const [key, value] of Object.entries(fullParams)) {
         bodyParams.append(key, String(value))
     }
+    // La firma 's' debe ser el último parámetro
     bodyParams.append("s", signature)
+
+    console.log(`[Flow Debug] URL: ${url}`)
+    console.log(`[Flow Debug] Method: ${method}`)
+    console.log(`[Flow Debug] Parameters:`, Object.keys(fullParams).join(", "), "s")
+    console.log(`[Flow Debug] Body String: ${bodyParams.toString()}`)
 
     const options: RequestInit = {
         method,
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
     }
 
     if (method === "POST" || method === "PUT") {
-        options.body = bodyParams
-        // Fetch manejará automáticamente el Content-Type para URLSearchParams
+        options.body = bodyParams.toString()
     } else {
-        // Para GET, los parámetros van en la URL
-        const queryUrl = `${url}?${bodyParams.toString()}`
-        return fetch(queryUrl, options).then(async (res) => {
+        // Para GET, todo va en la URL
+        const getUrl = `${url}?${bodyParams.toString()}`
+        return fetch(getUrl, options).then(async (res) => {
             if (!res.ok) {
                 const text = await res.text()
+                console.error(`[Flow API Error] GET ${endpoint}:`, {
+                    status: res.status,
+                    response: text
+                })
                 throw new Error(`Flow API error: ${res.status} - ${text}`)
             }
             return res.json()
@@ -86,13 +101,18 @@ export async function flowRequest(
 
         if (!response.ok) {
             const errorText = await response.text()
-            console.error("Flow Error Response:", errorText)
+            console.error(`[Flow API Error] ${method} ${endpoint}:`, {
+                status: response.status,
+                response: errorText
+            })
             throw new Error(`Flow API error: ${response.status} - ${errorText}`)
         }
 
-        return await response.json()
+        const data = await response.json()
+        console.log(`[Flow API Success] ${method} ${endpoint}`)
+        return data
     } catch (error: any) {
-        console.error("Flow API Request Failure:", error)
+        console.error(`[Flow API Failure] ${method} ${endpoint}:`, error.message)
         throw error
     }
 }

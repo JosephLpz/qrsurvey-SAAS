@@ -26,42 +26,38 @@ import { onAuthStateChanged } from "firebase/auth"
 import { getAnalyticsDashboard, type AnalyticsData } from "@/lib/services/analytics"
 import { getLocations, Location } from "@/lib/services/locations"
 import { getUserProfile, UserProfile } from "@/lib/services/users"
+import { useAuth } from "@/providers/AuthProvider"
+import { useLocation } from "@/providers/LocationProvider"
 
 export default function AnalyticsPage() {
+  const { user } = useAuth()
+  const { selectedLocation, locations } = useLocation()
   const [data, setData] = useState<AnalyticsData | null>(null)
-  const [locations, setLocations] = useState<Location[]>([])
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
-  const [selectedSede, setSelectedSede] = useState("all")
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
-  const fetchData = async (uid: string, sede: string) => {
-    try {
-      setRefreshing(true)
-      const [dashboardData, locationsData, profile] = await Promise.all([
-        getAnalyticsDashboard(uid, sede),
-        getLocations(uid),
-        getUserProfile(uid)
-      ])
-      setData(dashboardData)
-      setLocations(locationsData)
-      setUserProfile(profile)
-    } catch (error) {
-      console.error("Error loading analytics:", error)
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }
-
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        fetchData(user.uid, selectedSede)
+    if (user) {
+      const fetchData = async () => {
+        try {
+          setRefreshing(true)
+          const [dashboardData, profile] = await Promise.all([
+            getAnalyticsDashboard(user.uid, selectedLocation?.name),
+            getUserProfile(user.uid)
+          ])
+          setData(dashboardData)
+          setUserProfile(profile)
+        } catch (error) {
+          console.error("Error loading analytics:", error)
+        } finally {
+          setLoading(false)
+          setRefreshing(false)
+        }
       }
-    })
-    return () => unsubscribe()
-  }, [selectedSede])
+      fetchData()
+    }
+  }, [user, selectedLocation])
 
   if (loading) {
     return (
@@ -85,21 +81,7 @@ export default function AnalyticsPage() {
           <p className="text-muted-foreground text-lg">Visualiza el pulso de tu negocio en tiempo real.</p>
         </div>
 
-        <div className="flex items-center gap-2 bg-white p-2 rounded-2xl shadow-sm border">
-          <div className="flex items-center gap-2 px-3 border-r">
-            <MapPin className="h-4 w-4 text-primary" />
-            <Select value={selectedSede} onValueChange={setSelectedSede}>
-              <SelectTrigger className="w-[180px] border-none shadow-none focus:ring-0">
-                <SelectValue placeholder="Todas las sedes" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas las sedes</SelectItem>
-                {locations.map(loc => (
-                  <SelectItem key={loc.id} value={loc.name}>{loc.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="flex items-center gap-2">
           <Button variant="ghost" className="h-9 rounded-xl hover:bg-gray-100">
             <Download className="h-4 w-4 mr-2" />
             Exportar

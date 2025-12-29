@@ -85,8 +85,8 @@ export default function SignupPage() {
       <Card className="w-full max-w-md border-none shadow-2xl shadow-orange-100/50 rounded-[2.5rem] relative z-10 p-4">
         <CardHeader className="text-center space-y-6 pt-10">
           <Link href="/" className="text-3xl font-black tracking-tight flex items-center justify-center gap-2">
-            <span className="text-orange-600">Nexava</span>
-            <span className="text-slate-900">QRSurvey</span>
+            <span className="text-orange-600">QR</span>
+            <span className="text-slate-900">Survey</span>
           </Link>
           <div className="space-y-2">
             <CardTitle className="text-4xl font-black text-slate-900 tracking-tight">Crear cuenta</CardTitle>

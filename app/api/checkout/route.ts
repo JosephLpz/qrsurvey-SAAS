@@ -17,7 +17,7 @@ export async function POST(req: Request) {
             amount: process.env.FLOW_PRO_PRICE || "19000",
             email: userEmail,
             urlConfirmation: `${origin}/api/webhook`,
-            urlReturn: `${origin}/dashboard/ajustes?success=true`,
+            urlReturn: `${origin}/api/checkout/return`,
             currency: "CLP",
             optional: JSON.stringify({
                 userId: userId,

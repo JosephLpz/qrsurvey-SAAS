@@ -11,6 +11,8 @@ import {
     Download, Upload, Trash2, Layout, Palette, ShieldCheck, QrCode,
     AlertTriangle, CheckCircle2, Info, Maximize, Ruler, Sliders, Sparkles, RotateCcw
 } from "lucide-react"
+import { toast } from "sonner"
+import { toPng } from 'html-to-image'
 
 // Import conditionally for SSR
 let QRCodeStyling: any;
@@ -104,6 +106,7 @@ export function QRCodeCustomizer({ initialValue = "https://qrsurvey.com/s/demo",
     const [posterSub, setPosterSub] = useState("Escanea el código para dejarnos tus comentarios")
 
     const qrRef = useRef<HTMLDivElement>(null)
+    const posterRef = useRef<HTMLDivElement>(null)
     const qrInstance = useRef<any>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -165,8 +168,32 @@ export function QRCodeCustomizer({ initialValue = "https://qrsurvey.com/s/demo",
         }
     }, [settings]);
 
-    const handleDownload = () => {
-        qrInstance.current?.download({ name: "qrsurvey-qr-pro", extension: "png" });
+    const handleDownload = async () => {
+        if (!posterRef.current) return;
+
+        try {
+            toast.loading("Generando material de alta fidelidad...", { id: "downloading" });
+
+            // Generate the image from the DOM node
+            const dataUrl = await toPng(posterRef.current, {
+                pixelRatio: 3,
+                cacheBust: true,
+                backgroundColor: settings.bgColor,
+                filter: (node) => {
+                    return !node.classList?.contains('data-export-ignore');
+                }
+            });
+
+            const link = document.createElement('a');
+            link.download = `qrsurvey-poster-pro-${settings.printSize.toLowerCase()}.png`;
+            link.href = dataUrl;
+            link.click();
+
+            toast.success("Póster exportado correctamente", { id: "downloading" });
+        } catch (error) {
+            console.error("Error exporting poster:", error);
+            toast.error("Error al exportar el póster", { id: "downloading" });
+        }
     }
 
     const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -500,7 +527,15 @@ export function QRCodeCustomizer({ initialValue = "https://qrsurvey.com/s/demo",
                 </div>
 
                 {/* Poster Mockup */}
-                <div className="w-full max-w-[360px] aspect-[1/1.414] bg-white rounded-[2rem] shadow-2xl flex flex-col items-center border-[6px] overflow-hidden relative group transition-all duration-500" style={{ borderColor: settings.bgColor === "#FFFFFF" ? "#f1f5f9" : settings.bgColor }}>
+                <div
+                    ref={posterRef}
+                    className="w-full max-w-[360px] bg-white rounded-[2rem] shadow-2xl flex flex-col items-center border-[6px] overflow-hidden relative group transition-all duration-500"
+                    style={{
+                        borderColor: settings.bgColor === "#FFFFFF" ? "#f1f5f9" : settings.bgColor,
+                        backgroundColor: settings.bgColor,
+                        aspectRatio: settings.printSize === 'Card' ? '1/1.54' : settings.printSize === 'Poster' ? '1/1.4' : '1/1.414'
+                    }}
+                >
                     {/* Dynamic Header */}
                     <div
                         className="w-full h-12 flex items-center justify-center animate-in slide-in-from-top duration-500"
@@ -522,7 +557,7 @@ export function QRCodeCustomizer({ initialValue = "https://qrsurvey.com/s/demo",
                     </div>
 
                     <div
-                        className="mt-4 mb-4 p-4 bg-white rounded-[1.5rem] shadow-2xl border-4 relative transition-all group-hover:scale-105 duration-500 flex items-center justify-center overflow-hidden"
+                        className="mt-4 mb-8 p-4 bg-white rounded-[1.5rem] shadow-2xl border-4 relative transition-all group-hover:scale-105 duration-500 flex items-center justify-center overflow-hidden"
                         ref={qrRef}
                         style={{
                             borderColor: settings.fgColor + "15",
@@ -531,24 +566,8 @@ export function QRCodeCustomizer({ initialValue = "https://qrsurvey.com/s/demo",
                         }}
                     />
 
-
-                    <div className="mb-4 text-center w-full z-10">
-                        <div className="text-[8px] font-black uppercase tracking-[0.4em] text-gray-300 flex items-center justify-center gap-2">
-                            <ShieldCheck className="h-3 w-3" />
-                            PREMIUM SCAN PROTOCOL
-                        </div>
-                    </div>
-
-                    {/* Scale Ruler */}
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 opacity-10 pointer-events-none">
-                        <Ruler className="h-4 w-4" />
-                        <div className="h-16 w-[1px] bg-black" />
-                        <span className="text-[10px] font-black" style={{ writingMode: 'vertical-rl' }}>{settings.printSize}</span>
-                        <div className="h-16 w-[1px] bg-black" />
-                    </div>
-
-                    {/* Scanning Simulation Overlay */}
-                    <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-md">
+                    {/* Scanning Simulation Overlay - Excluded from export */}
+                    <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-md data-export-ignore">
                         <div className="w-48 h-48 border-2 border-primary/50 rounded-3xl relative overflow-hidden flex items-center justify-center">
                             <div className="absolute top-0 left-0 w-full h-1 bg-primary shadow-[0_0_15px_rgba(255,122,0,0.8)] animate-scan" />
                             <Sparkles className="h-10 w-10 text-primary opacity-20 animate-pulse" />

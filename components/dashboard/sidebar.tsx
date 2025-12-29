@@ -39,11 +39,10 @@ export function DashboardSidebar({
         isCollapsed ? "px-6" : "px-8"
       )}>
         <Link href="/dashboard" className="flex items-center gap-2">
-          <span className="text-2xl font-black text-orange-600 shrink-0">N</span>
+          <span className="text-2xl font-black text-orange-600 shrink-0">QR</span>
           {!isCollapsed && (
             <div className="flex items-center gap-1 animate-in fade-in slide-in-from-left-2 duration-500">
-              <span className="text-2xl font-black text-orange-600">exava</span>
-              <span className="text-2xl font-black text-slate-900">QRS</span>
+              <span className="text-2xl font-black text-slate-900">survey</span>
             </div>
           )}
         </Link>

@@ -7,13 +7,22 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search, Filter, Plus, Eye, Edit, Copy, QrCode, MoreHorizontal, Star, X } from "lucide-react"
+import { Search, Filter, Plus, Eye, Edit, Copy, QrCode, MoreHorizontal, Star, X, Sparkles, Trash2, Pause, Play, Link as LinkIcon } from "lucide-react"
 import Link from "next/link"
-import { type Survey, getSurveys } from "@/lib/services/surveys"
+import { type Survey, getSurveys, deleteSurvey, updateSurvey } from "@/lib/services/surveys"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
-import { auth } from "@/lib/firebase"
+import { auth, db } from "@/lib/firebase"
 import { onAuthStateChanged } from "firebase/auth"
+import { doc, getDoc } from "firebase/firestore"
 
 // ... imports
 import { duplicateSurvey } from "@/lib/services/surveys"
@@ -39,10 +48,21 @@ export default function EncuestasPage() {
     }
   }
 
+  const [userPlan, setUserPlan] = useState<"free" | "pro">("free")
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         await fetchSurveys(user.uid)
+        // Fetch user plan
+        try {
+          const userDoc = await getDoc(doc(db, "users", user.uid))
+          if (userDoc.exists()) {
+            setUserPlan(userDoc.data().plan || "free")
+          }
+        } catch (error) {
+          console.error("Error fetching user plan:", error)
+        }
       }
     })
 
@@ -63,6 +83,43 @@ export default function EncuestasPage() {
       toast.dismiss(toastId)
       toast.error("Error al duplicar la encuesta")
     }
+  }
+
+  const handleDelete = async (survey: Survey) => {
+    if (!survey.id) return
+    const confirmed = confirm(`¿Estás seguro de que deseas eliminar "${survey.name}"? Esta acción no se puede deshacer.`)
+    if (!confirmed) return
+
+    const toastId = toast.loading("Eliminando encuesta...")
+    try {
+      await deleteSurvey(survey.id)
+      if (auth.currentUser) await fetchSurveys(auth.currentUser.uid)
+      toast.success("Encuesta eliminada", { id: toastId })
+    } catch (error) {
+      console.error(error)
+      toast.error("Error al eliminar", { id: toastId })
+    }
+  }
+
+  const handleStatusToggle = async (survey: Survey) => {
+    if (!survey.id) return
+    const newStatus = survey.status === "Publicada" ? "Pausada" : "Publicada"
+    const toastId = toast.loading("Actualizando estado...")
+    try {
+      await updateSurvey(survey.id, { status: newStatus })
+      if (auth.currentUser) await fetchSurveys(auth.currentUser.uid)
+      toast.success(`Encuesta ${newStatus.toLowerCase()}`, { id: toastId })
+    } catch (error) {
+      console.error(error)
+      toast.error("Error al actualizar estado", { id: toastId })
+    }
+  }
+
+  const handleCopyLink = (id: string) => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+    const url = `${origin}/s/${id}`
+    navigator.clipboard.writeText(url)
+    toast.success("Enlace copiado al portapapeles")
   }
 
   // Filter Logic
@@ -284,19 +341,63 @@ export default function EncuestasPage() {
                           </Button>
                         </Link>
 
-                        <Button variant="ghost" size="icon" title="Duplicar" onClick={() => handleDuplicate(survey)}>
-                          <Copy className="h-4 w-4" />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="Copiar Enlace"
+                          onClick={() => handleCopyLink(survey.id!)}
+                        >
+                          <LinkIcon className="h-4 w-4" />
                         </Button>
 
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title={survey.status === "Publicada" ? "Pausar" : "Reanudar"}
+                          onClick={() => handleStatusToggle(survey)}
+                        >
+                          {survey.status === "Publicada" ? (
+                            <Pause className="h-4 w-4 text-amber-500" />
+                          ) : (
+                            <Play className="h-4 w-4 text-green-500" />
+                          )}
+                        </Button>
+
+                        {userPlan === "pro" && (
+                          <Link href={`/dashboard/qr-editor?surveyId=${survey.id}`}>
+                            <Button variant="ghost" size="icon" title="Elite QR Studio (Póster Pro)" className="text-orange-600 hover:text-orange-700 hover:bg-orange-50">
+                              <Sparkles className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        )}
+
                         <Link href={`/dashboard/qr-generator?surveyId=${survey.id}`}>
-                          <Button variant="ghost" size="icon" title="Generar QR">
+                          <Button variant="ghost" size="icon" title="Generador de QR">
                             <QrCode className="h-4 w-4" />
                           </Button>
                         </Link>
 
-                        <Button variant="ghost" size="icon" title="Más opciones">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" title="Más opciones">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem onClick={() => handleDuplicate(survey)}>
+                              <Copy className="h-4 w-4 mr-2" />
+                              Duplicar
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-rose-600 focus:text-rose-600 focus:bg-rose-50"
+                              onClick={() => handleDelete(survey)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Eliminar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </TableCell>
                   </TableRow>

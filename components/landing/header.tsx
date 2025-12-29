@@ -6,8 +6,8 @@ export function Header() {
     <header className="fixed top-0 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50 border-b">
       <div className="container mx-auto px-4 h-20 flex items-center justify-between">
         <Link href="/" className="text-2xl font-black tracking-tight flex items-center gap-2">
-          <span className="text-orange-600">Nexava</span>
-          <span className="text-slate-900">QRSurvey</span>
+          <span className="text-orange-600">QR</span>
+          <span className="text-slate-900">Survey</span>
         </Link>
 
         <nav className="hidden lg:flex items-center space-x-10">
